@@ -1,0 +1,24 @@
+{% extends layout ?: "@PayumCore/layout.html.twig" %}
+
+{% block payum_body %}
+    
+    {% block braintree_payment_form %}
+        <form method="POST" action="{{ formAction }}">
+            <div id="dropin-container"></div>
+            <input type="submit" value="Submit payment" />
+        </form>
+    {% endblock %}
+    
+    {% block braintree_load_js %}
+        <script src="https://js.braintreegateway.com/js/braintree-2.30.0.min.js"></script>
+    {% endblock %}
+    
+    {% block braintree_init_js %}
+        <script type="text/javascript">
+            braintree.setup({{ clientToken|json_encode|raw }}, 'dropin', {
+              container: 'dropin-container'
+            });
+        </script>
+    {% endblock %}
+    
+{% endblock %}

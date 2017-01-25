@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         bootstrap="autoload.php.dist" >
+    <php>
+        <var name="__PAYUM_BRAINTREE_MERCHANT_ID" value="gxxxcq7n23w4wk94" />
+        <var name="__PAYUM_BRAINTREE_PUBLIC_KEY" value="47gby6md2zfz3kvc" />
+        <var name="__PAYUM_BRAINTREE_PRIVATE_KEY" value="5ab17659d2b366950f1fcbedfe1ef45a" />
+    </php>
+
+    <testsuites>
+        <testsuite name="Payum Braintree extension">
+            <directory suffix="Test.php">./src/Tests</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>

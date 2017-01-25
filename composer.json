@@ -1,0 +1,35 @@
+{
+    "name": "gdaws/payum_braintree",
+    "type": "library",
+    "description": "A Payum extension for Braintree gateway integration",
+    "keywords": ["payment", "braintree", "payum"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Graham Daws",
+            "email": "graham.daws@gmail.com"
+        }
+    ],
+    "require": {
+        "payum/core": "^1.3",
+        "braintree/braintree_php": "^3.21.0"
+    },
+    "require-dev": {
+        "payum/core": "^1.3@dev",
+        "phpunit/phpunit": "^5.7.6"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "autoload": {
+        "psr-4": { 
+            "Payum\\Braintree\\": "src" 
+        }
+    },
+    "target-dir": "Payum/Braintree",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.3-dev"
+        }
+    }
+}
