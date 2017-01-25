@@ -26,7 +26,6 @@
             "Payum\\Braintree\\": "src" 
         }
     },
-    "target-dir": "Payum/Braintree",
     "extra": {
         "branch-alias": {
             "dev-master": "1.3-dev"
