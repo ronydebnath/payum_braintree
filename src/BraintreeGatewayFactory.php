@@ -1,6 +1,7 @@
 <?php
 namespace Payum\Braintree;
 
+use Payum\Braintree\Action\ConvertPaymentAction;
 use Payum\Braintree\Action\AuthorizeAction;
 use Payum\Braintree\Action\ObtainPaymentMethodNonceAction;
 use Payum\Braintree\Action\ObtainCardholderAuthenticationAction;
@@ -25,6 +26,8 @@ class BraintreeGatewayFactory extends GatewayFactory
 
             'payum.template.obtain_payment_method_nonce' => '@PayumBraintree/Action/obtain_payment_method_nonce.html.twig',
             'payum.template.obtain_cardholder_authentication' => '@PayumBraintree/Action/obtain_cardholder_authentication.html.twig',
+
+            'payum.action.convert_payment' => new ConvertPaymentAction(),
 
             'payum.action.authorize' => function(ArrayObject $config) {
                 return new AuthorizeAction($config['cardholder_authentication.enabled']);
