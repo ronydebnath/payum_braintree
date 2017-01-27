@@ -56,25 +56,28 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 
         if ($paymentMethodNonceInfo['type'] === 'CreditCard') {
 
-            if (false == array_key_exists('threeDSecureInfo', $paymentMethodNonceInfo) && true == $this->cardholderAuthenticationEnabled) {
-                
-                if (true == $paymentMethodNonceInfo['consumed']) {
+            if (true == $this->cardholderAuthenticationEnabled) {
+
+                if ((false == array_key_exists('threeDSecureInfo', $paymentMethodNonceInfo) || empty($paymentMethodNonceInfo['threeDSecureInfo']))) {
+                    
+                    if (true == $paymentMethodNonceInfo['consumed']) {
+
+                        $details['status'] = 'failed';
+                        $details['status_reason'] = 'attempted 3dsecure challenge on consumed payment method nonce';
+
+                        return;
+                    }
+
+                    $this->obtainCardholderAuthentication($details);
+                }
+
+                if (false == $this->hasLiabilityShifted($details)) {
 
                     $details['status'] = 'failed';
-                    $details['status_reason'] = 'attempted 3dsecure challenge on consumed payment method nonce';
+                    $details['status_reason'] = 'failed to obtain cardholder authentication';
 
                     return;
                 }
-
-                $this->obtainCardholderAuthentication($details);
-            }
-
-            if (false == $this->hasLiabilityShifted($details)) {
-
-                $details['status'] = 'failed';
-                $details['status_reason'] = 'failed to obtain cardholder authentication';
-
-                return;
             }
         }
 
