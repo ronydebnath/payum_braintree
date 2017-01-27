@@ -27,7 +27,7 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.template.obtain_cardholder_authentication' => '@PayumBraintree/Action/obtain_cardholder_authentication.html.twig',
 
             'payum.action.authorize' => function(ArrayObject $config) {
-                return new DoSaleAction($config['cardholder_authentication.enabled']);
+                return new AuthorizeAction($config['cardholder_authentication.enabled']);
             },
 
             'payum.action.obtain_payment_method_nonce' => function(ArrayObject $config) {
