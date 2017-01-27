@@ -30,7 +30,7 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.action.convert_payment' => new ConvertPaymentAction(),
 
             'payum.action.authorize' => function(ArrayObject $config) {
-                return new AuthorizeAction($config['cardholder_authentication.enabled']);
+                return new AuthorizeAction($config['cardholder_authentication_enabled']);
             },
 
             'payum.action.obtain_payment_method_nonce' => function(ArrayObject $config) {
