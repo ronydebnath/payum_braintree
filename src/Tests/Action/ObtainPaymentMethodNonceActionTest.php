@@ -30,6 +30,15 @@ class ObtainPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($rc->implementsInterface(GatewayAwareInterface::class));
     }
 
+    /**
+     * @test
+     */
+    public function shouldImplementSetCardholderAuthenticationRequiredMethod()
+    {
+        $this->action->setCardholderAuthenticationRequired(true);
+        $this->action->setCardholderAuthenticationRequired(false);   
+    }
+
     public function provideSupportedRequests()
     {
         return array(
@@ -75,8 +84,6 @@ class ObtainPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldThrowHttpResponseIfHttpRequestNotPost()
     {
-        $templateParams = array();
-
         $gatewayMock = $this->createGatewayMock();
 
         $gatewayMock
@@ -101,15 +108,15 @@ class ObtainPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
             ->expects($this->at(2))
             ->method('execute')
             ->with($this->isInstanceOf(RenderTemplate::class))
-            ->will($this->returnCallback(function(RenderTemplate $request) use (&$templateParams) {
+            ->will($this->returnCallback(function(RenderTemplate $request) {
                 
-                $templateParams = $request->getParameters();
-
                 $this->assertEquals('aTemplateName', $request->getTemplateName());
 
                 $templateParameters = $request->getParameters();
 
                 $this->assertEquals('aClientToken', $templateParameters['clientToken']);
+                $this->assertEquals(123, $templateParameters['amount']);
+                $this->assertEquals(false, $templateParameters['obtainCardholderAuthentication']);
 
                 $request->setResult('renderedTemplate');
             }))
@@ -117,8 +124,12 @@ class ObtainPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
 
         $this->action->setGateway($gatewayMock);
 
+        $this->action->setCardholderAuthenticationRequired(false);
+
         try {
-            $this->action->execute(new ObtainPaymentMethodNonce(array()));
+            $this->action->execute(new ObtainPaymentMethodNonce(array(
+                'amount' => 123
+            )));
         }
         catch(HttpResponse $reply) {
 
@@ -152,6 +163,27 @@ class ObtainPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
         $this->action->execute($request = new ObtainPaymentMethodNonce(array()));
 
         $this->assertEquals('aPaymentMethodNonce', $request->getResponse());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotOperateIfPaymentMethodNoncePresent()
+    {
+        $gatewayMock = $this->createGatewayMock();
+
+        $gatewayMock
+            ->expects($this->never())
+            ->method('execute')
+        ;
+
+        $this->action->setGateway($gatewayMock);
+
+        $this->action->execute($request = new ObtainPaymentMethodNonce(array(
+            'paymentMethodNonce' => 'first_nonce'
+        )));
+
+        $this->assertEquals('first_nonce', $request->getResponse());
     }
 
     /**
