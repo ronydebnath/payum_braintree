@@ -2,7 +2,6 @@
 namespace Payum\Braintree\Request\Api;
 
 use Payum\Core\Request\Generic;
-use Braintree\Instance as BraintreeInstance;
 
 class DoSale extends Generic
 {
@@ -13,7 +12,7 @@ class DoSale extends Generic
         return $this->response;
     }
     
-    public function setResponse(BraintreeInstance $value)
+    public function setResponse($value)
     {
         $this->response = $value;
     }

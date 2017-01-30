@@ -6,7 +6,7 @@ use Payum\Braintree\Util\ArrayUtils;
 
 class TransactionResultArray
 {
-    public static function toArray(Instance $object)
+    public static function toArray($object)
     {
         if (null == $object) {
             return;
@@ -16,7 +16,7 @@ class TransactionResultArray
             'success', 'transaction', 'errors'
         ]);
 
-        if (array_key_exists('transaction', $array)) {
+        if (array_key_exists('transaction', $array) && null !== $array['transaction']) {
             $array['transaction'] = TransactionArray::toArray($array['transaction']);
         }
 
