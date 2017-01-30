@@ -45,9 +45,9 @@ class ObtainCardholderAuthenticationAction implements ActionInterface, GatewayAw
 
         $this->gateway->execute($clientHttpRequest = new GetHttpRequest());
 
-        if ('POST' == $clientHttpRequest->method && array_key_exists('payment_method_nonce', $clientHttpRequest->request)) {
-            
-            $paymentMethodNonce = $clientHttpRequest->request['payment_method_nonce'];
+        if ('POST' == $clientHttpRequest->method && array_key_exists('threeDSecure_payment_method_nonce', $clientHttpRequest->request)) {
+
+            $paymentMethodNonce = $clientHttpRequest->request['threeDSecure_payment_method_nonce'];
             
             $request->setResponse($paymentMethodNonce);
             return;

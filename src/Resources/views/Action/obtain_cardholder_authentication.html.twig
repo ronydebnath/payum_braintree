@@ -9,7 +9,7 @@
         </div>
         
         <form id="form" method="POST" action="{{ formAction }}">
-            <input type="hidden" name="nonce" id="payment_method_nonce" />
+            <input type="hidden" name="nonce" id="threeDSecure_payment_method_nonce" />
         </form>
         
     {% endblock %}
@@ -45,7 +45,7 @@
                 
                 var form = document.getElementById("form");
                 
-                var nonceInput = document.getElementById("payment_method_nonce");
+                var nonceInput = document.getElementById("threeDSecure_payment_method_nonce");
                 nonceInput.value = response.nonce;
                 
                 form.submit();
