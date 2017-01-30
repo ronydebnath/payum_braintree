@@ -19,9 +19,18 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
 
     private $templateName;
 
+    protected $cardholderAuthenticationRequired;
+
     public function __construct($templateName)
     {
         $this->templateName = $templateName;
+        
+        $this->cardholderAuthenticationRequired = true;
+    }
+
+    public function setCardholderAuthenticationRequired($value)
+    {
+        $this->cardholderAuthenticationRequired = $value;
     }
 
     /**
@@ -60,7 +69,9 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
         $this->gateway->execute($template = new RenderTemplate($this->templateName, [
             'formAction' => $clientHttpRequest->uri,
             'clientToken' => $details['clientToken'],
-            'details' => $details
+            'amount' => $details['amount'],
+            'details' => $details,
+            'obtainCardholderAuthentication' => $this->cardholderAuthenticationRequired
         ]));
 
         throw new HttpResponse($template->getResult());

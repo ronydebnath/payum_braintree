@@ -3,8 +3,9 @@
 {% block payum_body %}
     
     {% block braintree_payment_form %}
-        <form method="POST" action="{{ formAction }}">
+        <form method="POST" action="{{ formAction }}" id="form">
             <div id="dropin-container"></div>
+            <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
             <input type="submit" value="Submit payment" />
         </form>
     {% endblock %}
@@ -15,9 +16,72 @@
     
     {% block braintree_init_js %}
         <script type="text/javascript">
-            braintree.setup({{ clientToken|json_encode|raw }}, 'dropin', {
-              container: 'dropin-container'
+
+            function obtainPaymentMethodNonce(braintree, state, callback) {
+
+                braintree.setup(state.clientToken, 'dropin', {
+                    container: 'dropin-container',
+                    onPaymentMethodReceived: function (response) {
+
+                        if (state.obtainCardholderAuthentication && 'CreditCard' == response.type) {
+
+                            state.creditCard = response.nonce;
+
+                            obtainCardholderAuthentication(braintree, state, function(error, nonce) {
+                                
+                                if (error) {
+                                    callback(error);
+                                    return;
+                                }
+
+                                callback(null, nonce);
+                            });
+                        }
+                        else {
+                            callback(null, response.nonce);
+                        }
+                    }
+                });
+            }
+
+            function obtainCardholderAuthentication(braintree, state, callback) {
+
+                var client = new braintree.api.Client({
+                    clientToken: state.clientToken
+                });
+
+                client.verify3DS({
+                    amount: state.amount,
+                    creditCard: state.creditCard
+                }, function (error, response) {
+                    
+                    if (error) {
+                        callback(error);
+                        return;
+                    }
+
+                    callback(null, response.nonce);
+                });
+            }
+
+            obtainPaymentMethodNonce(braintree, {
+                clientToken: {{ clientToken|json_encode|raw }},
+                amount: {{ amount|json_encode|raw }},
+                obtainCardholderAuthentication: {{ obtainCardholderAuthentication|json_encode|raw }}
+            }, function(error, nonce) {
+
+                if (error) {
+                    
+                    return;
+                }
+
+                var input = document.getElementById('payment_method_nonce');
+                input.value = nonce;
+
+                var form = document.getElementById('form');
+                form.submit();
             });
+
         </script>
     {% endblock %}
     
