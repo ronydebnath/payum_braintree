@@ -22,6 +22,15 @@ class AuthorizeActionTest extends GenericActionTest
     /**
      * @test
      */
+    public function shouldImplementSetCardholderAuthenticationRequiredMethod()
+    {
+        $this->action->setCardholderAuthenticationRequired(true);
+        $this->action->setCardholderAuthenticationRequired(false);   
+    }
+
+    /**
+     * @test
+     */
     public function shouldAuthorizeWithObtainedCreditCard()
     {
         $gatewayMock = $this->createGatwayMockWithExecutes([
@@ -181,6 +190,54 @@ class AuthorizeActionTest extends GenericActionTest
                 'success' => false,
                 'transaction' => array(),
                 'errors' => array()
+            )
+        ));
+
+        $action->execute($request);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetSaleOptions()
+    {
+        $gatewayMock = $this->createGatewayMock();
+
+        $gatewayMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->isInstanceOf(DoSale::class))
+            ->will($this->returnCallback(function($request) {
+
+                $details = ArrayObject::ensureArrayObject($request->getModel());
+
+                $this->assertArrayHasKey('saleOptions', $details);
+
+                $this->assertTrue($details['saleOptions']['threeDSecure']['required']);
+                $this->assertFalse($details['saleOptions']['submitForSettlement']);
+
+                $request->setResponse(new Result\Successful(Transaction::factory([
+                    'id' => 1,
+                    'status' => 'authorized'
+                ])));
+            }))
+        ;
+
+        $action = new AuthorizeAction();
+        $action->setGateway($gatewayMock);
+
+        $request = new Authorize(array(
+            'amount' => 123,
+            'paymentMethodNonce' => 'first_nonce',
+            'paymentMethodNonceInfo' => array(
+                'nonce' => 'first_nonce',
+                'type' => 'creditCard',
+                'threeDSecureInfo' => array(
+                    'enrolled' => 'Y',
+                    'status' => 'authenticate_successful',
+                    'liabilityShifted' => true,
+                    'liabilityShiftPossible' => true
+                )
             )
         ));
 
