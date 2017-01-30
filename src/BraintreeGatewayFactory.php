@@ -30,11 +30,15 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.action.convert_payment' => new ConvertPaymentAction(),
 
             'payum.action.authorize' => function(ArrayObject $config) {
-                return new AuthorizeAction($config['cardholder_authentication_enabled']);
+                $action = new AuthorizeAction();
+                $action->setCardholderAuthenticationRequired($config['cardholderAuthenticationRequired']);
+                return $action;
             },
 
             'payum.action.obtain_payment_method_nonce' => function(ArrayObject $config) {
-                return new ObtainPaymentMethodNonceAction($config['payum.template.obtain_payment_method_nonce']);
+                $action = new ObtainPaymentMethodNonceAction($config['payum.template.obtain_payment_method_nonce']);
+                $action->setCardholderAuthenticationRequired($config['cardholderAuthenticationRequired']);
+                return $action;
             },
 
             'payum.action.obtain_cardholder_authentication' => function(ArrayObject $config) {
@@ -47,9 +51,9 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.action.api.find_payment_method_nonce' => new FindPaymentMethodNonceAction(),
             'payum.action.api.do_sale' => new DoSaleAction(),
 
-            'cardholder_authentication_enabled' => true
+            'cardholderAuthenticationRequired' => true
         ]);
-        
+
         if (false == $config['payum.api']) {
             $config['payum.default_options'] = array(
                 'sandbox' => true,

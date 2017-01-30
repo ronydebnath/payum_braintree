@@ -19,16 +19,16 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
 
-    protected $cardholderAuthenticationEnabled;
+    protected $cardholderAuthenticationRequired;
 
-    public function __construct($cardholderAuthenticationEnabled = true)
+    public function __construct()
     {
-        $this->cardholderAuthenticationEnabled = $cardholderAuthenticationEnabled;
+        $this->cardholderAuthenticationRequired = true;
     }
 
-    public function setCardholderAuthenticationEnabled($value)
+    public function setCardholderAuthenticationRequired($value)
     {
-        $this->cardholderAuthenticationEnabled = $value;
+        $this->cardholderAuthenticationRequired = $value;
     }
 
     /**
@@ -56,28 +56,8 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 
         if ($paymentMethodNonceInfo['type'] === 'CreditCard') {
 
-            if (true == $this->cardholderAuthenticationEnabled) {
-
-                if ((false == array_key_exists('threeDSecureInfo', $paymentMethodNonceInfo) || empty($paymentMethodNonceInfo['threeDSecureInfo']))) {
-                    
-                    if (true == $paymentMethodNonceInfo['consumed']) {
-
-                        $details['status'] = 'failed';
-                        $details['status_reason'] = 'attempted 3dsecure challenge on consumed payment method nonce';
-
-                        return;
-                    }
-
-                    $this->obtainCardholderAuthentication($details);
-                }
-
-                if (false == $this->hasLiabilityShifted($details)) {
-
-                    $details['status'] = 'failed';
-                    $details['status_reason'] = 'failed to obtain cardholder authentication';
-
-                    return;
-                }
+            if (true == $this->cardholderAuthenticationRequired && empty($paymentMethodNonceInfo['threeDSecureInfo'])) {
+                $this->obtainCardholderAuthentication($details);
             }
         }
 
@@ -124,7 +104,9 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 
         $details['paymentMethodNonce'] = $paymentMethodNonce;
 
-        $this->findPaymentMethodNonceInfo($details);
+        if (false == $details->offsetExists('paymentMethodInfo')) {
+            $this->findPaymentMethodNonceInfo($details);
+        }
     }
 
     protected function findPaymentMethodNonceInfo($details)
@@ -153,15 +135,21 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
         return $request->getPaymentMethodNonceArray();
     }
 
-    protected function hasLiabilityShifted($details)
-    {
-        $result = $details['paymentMethodNonceInfo']['threeDSecureInfo'];
-
-        return true == $result['liabilityShiftPossible'] && false == $result['liabilityShifted'];
-    }
-
     protected function doSaleTransaction($details) 
     {
+        $saleOptions = [
+            'submitForSettlement' => false
+        ];
+
+        if ($details->offsetExists('paymentMethodNonce')) {
+
+            $saleOptions['threeDSecure'] = [
+                'required' => $this->cardholderAuthenticationRequired
+            ];
+        }
+
+        $details['saleOptions'] = $saleOptions;        
+
         $this->gateway->execute($request = new DoSale($details));
 
         $transaction = $request->getResponse();
