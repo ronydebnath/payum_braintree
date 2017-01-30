@@ -59,7 +59,7 @@ class StatusActionTest extends GenericActionTest
 
         $action->execute($status = new GetHumanStatus(array(
             'status' => 'authorized',
-            'transaction' => array(
+            'sale' => array(
                 'success' => true
             )
         )));
@@ -76,7 +76,7 @@ class StatusActionTest extends GenericActionTest
 
         $action->execute($status = new GetHumanStatus(array(
             'status' => 'captured',
-            'transaction' => array(
+            'sale' => array(
                 'success' => true
             )
         )));
@@ -107,7 +107,7 @@ class StatusActionTest extends GenericActionTest
 
         $action->execute($status = new GetHumanStatus(array(
             'status' => 'captured',
-            'transaction' => array(
+            'sale' => array(
                 'success' => false    
             )
         )));

@@ -75,7 +75,7 @@ class StatusAction implements ActionInterface
 
     protected function hasSuccessfulTransaction($details) 
     {
-        return $details['transaction'] && $details['transaction']['success'];
+        return $details['sale'] && $details['sale']['success'];
     }
 
     /**
