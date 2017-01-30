@@ -149,7 +149,7 @@ class ObtainCardholderAuthenticationActionTest extends \PHPUnit_Framework_TestCa
             ->with($this->isInstanceOf(GetHttpRequest::class))
             ->will($this->returnCallback(function(GetHttpRequest $request) {
                 $request->method = 'POST';
-                $request->request['payment_method_nonce'] = 'second_nonce';
+                $request->request['threeDSecure_payment_method_nonce'] = 'second_nonce';
             }))
         ;
      
