@@ -3,6 +3,8 @@ namespace Payum\Braintree\Action\Api;
 
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Braintree\Request\Api\FindPaymentMethodNonce;
+use Braintree\Exception\NotFound;
+
 
 class FindPaymentMethodNonceAction extends BaseApiAwareAction
 {
@@ -16,9 +18,14 @@ class FindPaymentMethodNonceAction extends BaseApiAwareAction
         /** @var $request GenerateClientToken */
         RequestNotSupportedException::assertSupports($this, $request);
         
-        $paymentMethodNonce = $this->api->findPaymentMethodNonce($request->getNonceString());
-        
-        $request->setResponse($paymentMethodNonce);
+        try {
+            $paymentMethodNonce = $this->api->findPaymentMethodNonce($request->getNonceString());
+
+            $request->setResponse($paymentMethodNonce);
+        }
+        catch(NotFound $exception) {
+            return;
+        }
     }
 
     /**

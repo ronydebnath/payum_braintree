@@ -7,6 +7,7 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Authorize;
 use Payum\Core\Exception\RequestNotSupportedException;
+use Payum\Core\Exception\RuntimeException;
 use Payum\Braintree\Request\ObtainPaymentMethodNonce;
 use Payum\Braintree\Request\ObtainCardholderAuthentication;
 use Payum\Braintree\Request\Api\FindPaymentMethodNonce;
@@ -46,20 +47,27 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
             return;
         }
 
-        $this->obtainPaymentMethodNonce($details);
+        try {
+            $this->obtainPaymentMethodNonce($details);
 
-        $this->obtainCardholderAuthentication($details);
+            $this->obtainCardholderAuthentication($details);
 
-        $this->doSaleTransaction($details);
+            $this->doSaleTransaction($details);
 
-        $this->resolveStatus($details);
+            $this->resolveStatus($details);
 
-        $details->validateNotEmpty([
-            'paymentMethodNonce', 
-            'paymentMethodNonceInfo', 
-            'sale', 
-            'status'
-        ]);
+            $details->validateNotEmpty([
+                'paymentMethodNonce', 
+                'paymentMethodNonceInfo', 
+                'sale', 
+                'status'
+            ]);
+        }
+        catch(RuntimeException $exception) { 
+
+            $details['status'] = 'failed';
+            $details['status_reason'] = $exception->getMessage();
+        }
     }
 
     protected function obtainPaymentMethodNonce($details)
@@ -103,6 +111,10 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
         $this->gateway->execute($request = new FindPaymentMethodNonce($details['paymentMethodNonce']));
 
         $paymentMethodInfo = $request->getResponse();
+
+        if (null === $paymentMethodInfo) {
+            throw new RuntimeException('payment_method_nonce not found');
+        }
 
         $details['paymentMethodNonceInfo'] = PaymentMethodNonceArray::toArray($paymentMethodInfo);
     }
