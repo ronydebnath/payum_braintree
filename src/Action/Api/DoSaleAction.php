@@ -30,7 +30,7 @@ class DoSaleAction extends BaseApiAwareAction
 
         $details->validateNotEmpty(['amount']);
 
-        $requestParams = [];
+        $requestParams = new ArrayObject();
 
         $forwardParams = [
             'amount', 

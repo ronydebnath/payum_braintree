@@ -57,6 +57,10 @@ class BraintreeGatewayFactory extends GatewayFactory
         if (false == $config['payum.api']) {
             $config['payum.default_options'] = array(
                 'sandbox' => true,
+                'storeInVault' => null,
+                'storeInVaultOnSuccess' => null,
+                'storeShippingAddressInVault' => null,
+                'addBillingAddressToPaymentMethod' => null
             );
             $config->defaults($config['payum.default_options']);
             $config['payum.required_options'] = [];

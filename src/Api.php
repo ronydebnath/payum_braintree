@@ -1,6 +1,7 @@
 <?php
 namespace Payum\Braintree;
 
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Braintree\Configuration;
 use Braintree\ClientToken;
 use Braintree\PaymentMethodNonce;
@@ -46,8 +47,34 @@ class Api
         return PaymentMethodNonce::find($nonceString);
     }
     
-    public function sale($params)
+    public function sale(ArrayObject $params)
     {
-        return Transaction::sale($params);
+        $options = $params->offsetExists('options') ? $params['options'] : array();
+
+        if (null !== $this->options['storeInVault'] && !isset($options['storeInVault'])) {
+            $options['storeInVault'] = $this->options['storeInVault'];
+        }
+
+        if (null !== $this->options['storeInVaultOnSuccess'] && !isset($options['storeInVaultOnSuccess'])) {
+            $options['storeInVaultOnSuccess'] = $this->options['storeInVaultOnSuccess'];
+        }
+
+        if (null !== $this->options['addBillingAddressToPaymentMethod'] && 
+            !isset($options['addBillingAddressToPaymentMethod']) && 
+            $params->offsetExists('billing')) {
+
+            $options['addBillingAddressToPaymentMethod'] = $this->options['addBillingAddressToPaymentMethod'];
+        }
+
+        if (null !== $this->options['storeShippingAddressInVault'] && 
+            !isset($options['storeShippingAddressInVault']) && 
+            $params->offsetExists('shipping')) {
+
+            $options['storeShippingAddressInVault'] = $this->options['storeShippingAddressInVault'];
+        }
+
+        $params['options'] = $options;
+
+        return Transaction::sale((array)$params);
     }
 }
