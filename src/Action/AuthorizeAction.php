@@ -42,30 +42,99 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 
         $details = ArrayObject::ensureArrayObject($request->getModel());
 
-        if (true == $details->offsetExists('status')) {
+        if ($details->offsetExists('status')) {
             return;
         }
 
-        if (false == $details->offsetExists('paymentMethodNonce')) {
-            $this->obtainPaymentMethodNonce($details);
+        $this->obtainPaymentMethodNonce($details);
+
+        $this->obtainCardholderAuthentication($details);
+
+        $this->doSaleTransaction($details);
+
+        $this->resolveStatus($details);
+
+        $details->validateNotEmpty([
+            'paymentMethodNonce', 
+            'paymentMethodNonceInfo', 
+            'sale', 
+            'status'
+        ]);
+    }
+
+    protected function obtainPaymentMethodNonce($details)
+    {
+        if ($details->offsetExists('paymentMethodNonce')) {
+            return;
         }
 
-        $details->validateNotEmpty(['paymentMethodNonceInfo']);
+        $this->gateway->execute($request = new ObtainPaymentMethodNonce($details));
 
+        $paymentMethodNonce = $request->getResponse();
+
+        $details['paymentMethodNonce'] = $paymentMethodNonce;
+
+        $this->findPaymentMethodNonceInfo($details);
+    }
+
+    protected function obtainCardholderAuthentication($details)
+    {        
         $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
 
-        if ($paymentMethodNonceInfo['type'] === 'CreditCard') {
+        $isNotRequired = true !== $this->cardholderAuthenticationRequired;
+        $isNotCreditCardType = 'CreditCard' !== $paymentMethodNonceInfo['type'];
+        $has3DSecureInfo = !empty($paymentMethodNonceInfo['threeDSecureInfo']);
 
-            if (true == $this->cardholderAuthenticationRequired && empty($paymentMethodNonceInfo['threeDSecureInfo'])) {
-                $this->obtainCardholderAuthentication($details);
-            }
+        if ($isNotRequired || $isNotCreditCardType || $has3DSecureInfo) {
+            return;
         }
 
-        if (false == $details->offsetExists('sale')) {
+        $this->gateway->execute($request = new ObtainCardholderAuthentication($details));
 
-            $this->doSaleTransaction($details);
+        $paymentMethodNonce = $request->getResponse();
+
+        $details['paymentMethodNonce'] = $paymentMethodNonce;
+
+        $this->findPaymentMethodNonceInfo($details);
+    }
+
+    protected function findPaymentMethodNonceInfo($details)
+    {
+        $this->gateway->execute($request = new FindPaymentMethodNonce($details['paymentMethodNonce']));
+
+        $paymentMethodInfo = $request->getResponse();
+
+        $details['paymentMethodNonceInfo'] = PaymentMethodNonceArray::toArray($paymentMethodInfo);
+    }
+
+    protected function doSaleTransaction($details) 
+    {
+        if ($details->offsetExists('sale')) {
+            return;    
         }
 
+        $saleOptions = [
+            'submitForSettlement' => false
+        ];
+
+        if ($details->offsetExists('paymentMethodNonce')) {
+
+            $saleOptions['threeDSecure'] = [
+                'required' => $this->cardholderAuthenticationRequired
+            ];
+        }
+
+        $details['saleOptions'] = $saleOptions;        
+
+        $this->gateway->execute($request = new DoSale($details));
+
+        $transaction = $request->getResponse();
+
+        $details['sale'] = TransactionResultArray::toArray($transaction);
+    }
+
+    protected function resolveStatus($details)
+    {
         $details->validateNotEmpty(['sale']);
 
         $sale = $details['sale'];
@@ -94,67 +163,6 @@ class AuthorizeAction implements ActionInterface, GatewayAwareInterface
 
             $details['status'] = 'failed';
         }
-    }
-
-    protected function obtainPaymentMethodNonce($details)
-    {
-        $this->gateway->execute($request = new ObtainPaymentMethodNonce($details));
-
-        $paymentMethodNonce = $request->getResponse();
-
-        $details['paymentMethodNonce'] = $paymentMethodNonce;
-
-        if (false == $details->offsetExists('paymentMethodInfo')) {
-            $this->findPaymentMethodNonceInfo($details);
-        }
-    }
-
-    protected function findPaymentMethodNonceInfo($details)
-    {
-        $this->gateway->execute($request = new FindPaymentMethodNonce($details['paymentMethodNonce']));
-
-        $paymentMethodInfo = $request->getResponse();
-
-        $details['paymentMethodNonceInfo'] = PaymentMethodNonceArray::toArray($paymentMethodInfo);
-    }
-
-    protected function obtainCardholderAuthentication($details)
-    {
-        $this->gateway->execute($request = new ObtainCardholderAuthentication($details));
-
-        $paymentMethodNonce = $request->getResponse();
-
-        $details['paymentMethodNonce'] = $paymentMethodNonce;
-
-        $this->findPaymentMethodNonceInfo($details);
-    }
-
-    protected function getPaymentMethodNonceInfo($nonceString)
-    {
-        $this->gateway->execute($request = new FindPaymentMethodNonce($details['paymentMethodNonce']));
-        return $request->getPaymentMethodNonceArray();
-    }
-
-    protected function doSaleTransaction($details) 
-    {
-        $saleOptions = [
-            'submitForSettlement' => false
-        ];
-
-        if ($details->offsetExists('paymentMethodNonce')) {
-
-            $saleOptions['threeDSecure'] = [
-                'required' => $this->cardholderAuthenticationRequired
-            ];
-        }
-
-        $details['saleOptions'] = $saleOptions;        
-
-        $this->gateway->execute($request = new DoSale($details));
-
-        $transaction = $request->getResponse();
-
-        $details['sale'] = TransactionResultArray::toArray($transaction);
     }
 
     /**
