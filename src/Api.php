@@ -48,7 +48,7 @@ class Api
 
     public function generateClientToken($params)
     {
-        if (array_key_exists('merchantAccountId', $this->options)) {
+        if (array_key_exists('merchantAccountId', $this->options) && null !== $this->options['merchantAccountId']) {
             $params['merchantAccountId'] = $this->options['merchantAccountId'];
         }
 
@@ -88,7 +88,7 @@ class Api
 
         $params['options'] = $options;
 
-        if (array_key_exists('merchantAccountId', $this->options)) {
+        if (array_key_exists('merchantAccountId', $this->options) && null !== $this->options['merchantAccountId']) {
             $params['merchantAccountId'] = $this->options['merchantAccountId'];
         }
 
