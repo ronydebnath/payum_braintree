@@ -30,7 +30,16 @@ class Api
     {
         Configuration::reset();
 
-        Configuration::environment($this->options['sandbox'] ? 'sandbox' : 'production');
+        $environment = 'sandbox';
+
+        if (array_key_exists('environment', $this->options) && null !== $this->options['environment']) {
+            $environment = $this->options['environment'];
+        }
+        else if (array_key_exists('sandbox', $this->options) && null !== $this->options['sandbox']) {
+            $environment = !$this->options['sandbox'] ? 'production' : 'sandbox';
+        }
+
+        Configuration::environment($environment);
 
         Configuration::merchantId($this->options['merchantId']);
         Configuration::publicKey($this->options['publicKey']);
