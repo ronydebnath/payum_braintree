@@ -39,6 +39,10 @@ class Api
 
     public function generateClientToken($params)
     {
+        if (array_key_exists('merchantAccountId', $this->options)) {
+            $params['merchantAccountId'] = $this->options['merchantAccountId'];
+        }
+
         return ClientToken::generate($params);
     }
     
@@ -74,6 +78,10 @@ class Api
         }
 
         $params['options'] = $options;
+
+        if (array_key_exists('merchantAccountId', $this->options)) {
+            $params['merchantAccountId'] = $this->options['merchantAccountId'];
+        }
 
         return Transaction::sale((array)$params);
     }
