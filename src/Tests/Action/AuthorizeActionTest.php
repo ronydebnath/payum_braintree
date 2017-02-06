@@ -33,21 +33,22 @@ class AuthorizeActionTest extends GenericActionTest
      */
     public function shouldAuthorizeWithObtainedCreditCard()
     {
-        $gatewayMock = $this->createGatwayMockWithExecutes([
-            
-            [
-                'Payum\Braintree\Request\ObtainPaymentMethodNonce',
+        $gatewayMock = $this->createGatewayMock();
 
-                function(ObtainPaymentMethodNonce $request) {
+        $gatewayMock
+            ->expects($this->at(0))
+            ->method('execute')
+            ->with($this->isInstanceOf('Payum\Braintree\Request\ObtainPaymentMethodNonce'))
+            ->will($this->returnCallback(function(ObtainPaymentMethodNonce $request) {
+                $request->setResponse('first_nonce');
+            }))
+        ;
 
-                    $request->setResponse('first_nonce');
-                }
-            ],
-
-            [
-                'Payum\Braintree\Request\Api\FindPaymentMethodNonce',
-
-                function(FindPaymentMethodNonce $request) {
+        $gatewayMock
+            ->expects($this->at(1))
+            ->method('execute')
+            ->with($this->isInstanceOf('Payum\Braintree\Request\Api\FindPaymentMethodNonce'))
+            ->will($this->returnCallback(function(FindPaymentMethodNonce $request) {
 
                     $request->setResponse(PaymentMethodNonce::factory([
                         'nonce' => 'first_nonce',
@@ -60,72 +61,74 @@ class AuthorizeActionTest extends GenericActionTest
                             'bin' => '123456'
                         ]
                     ]));
-                }
-            ],
+            }))
+        ;
 
-            [
-                'Payum\Braintree\Request\ObtainCardholderAuthentication',
+        $gatewayMock
+            ->expects($this->at(2))
+            ->method('execute')
+            ->with($this->isInstanceOf('Payum\Braintree\Request\ObtainCardholderAuthentication'))
+            ->will($this->returnCallback(function(ObtainCardholderAuthentication $request) {
 
-                function(ObtainCardholderAuthentication $request) {
+                $request->setResponse('second_nonce');
+            }))
+        ;
 
-                    $request->setResponse('second_nonce');
-                }
-            ],
-            
-            [
-                'Payum\Braintree\Request\Api\FindPaymentMethodNonce',
+        $gatewayMock
+            ->expects($this->at(3))
+            ->method('execute')
+            ->with($this->isInstanceOf('Payum\Braintree\Request\Api\FindPaymentMethodNonce'))
+            ->will($this->returnCallback(function(FindPaymentMethodNonce $request) {
 
-                function(FindPaymentMethodNonce $request) {
-
-                    $request->setResponse(PaymentMethodNonce::factory([
-                            'nonce' => 'second_nonce',
-                            'consumed' => false,
-                            'default' => false,
-                            'type' => 'CreditCard',
-                            'details' => [
-                                'cardType' => 'Visa',
-                                'last2' => '11'
-                            ],
-                            'threeDSecureInfo' => [
-                                'enrolled' => 'Y',
-                                'liabilityShiftPossible' => true,
-                                'liabilityShifted' => false,
-                                'status' => 'authenticate_successful'
-                            ]
-                    ]));
-                }
-            ],
-
-            [
-                'Payum\Braintree\Request\Api\DoSale',
-
-                function(DoSale $request) {
-
-                    $request->setResponse(new Result\Successful(Transaction::factory([
-                        'id' => 'transaction_id',
-                        'status' => 'authorized',
-                        'type' => 'sale',
-                        'currencyIsoCode' => 'EUR',
-                        'amount' => 10,
-                        'merchantAccountId' => '',
-                        'paymentInstrumentType' => 'credit_card',
-                        'creditCard' => [
-                            'token' => '9662jd',
-                            'bin' => '510510',
-                            'last4' => '5100',
-                            'cardType' => 'MasterCard',
-                            'expirationMonth' => '12',
-                            'expirationYear' => '2020',
-                            'cardholderName' => null,
-                            'issuingBank' => 'Unknown',
-                            'countryOfIssuance' => 'Unknown',
-                            'productId' => 'Unknown',
-                            'uniqueNumberIdentifier' => '0658f55519a57e295d5e5f485559e405'
+                $request->setResponse(PaymentMethodNonce::factory([
+                        'nonce' => 'second_nonce',
+                        'consumed' => false,
+                        'default' => false,
+                        'type' => 'CreditCard',
+                        'details' => [
+                            'cardType' => 'Visa',
+                            'last2' => '11'
+                        ],
+                        'threeDSecureInfo' => [
+                            'enrolled' => 'Y',
+                            'liabilityShiftPossible' => true,
+                            'liabilityShifted' => false,
+                            'status' => 'authenticate_successful'
                         ]
-                    ])));
-                }
-            ]
-        ]);
+                ]));
+            }))
+        ;
+
+        $gatewayMock
+            ->expects($this->at(4))
+            ->method('execute')
+            ->with($this->isInstanceOf('Payum\Braintree\Request\Api\DoSale'))
+            ->will($this->returnCallback(function(DoSale $request) {
+
+                $request->setResponse(new Result\Successful(Transaction::factory([
+                    'id' => 'transaction_id',
+                    'status' => 'authorized',
+                    'type' => 'sale',
+                    'currencyIsoCode' => 'EUR',
+                    'amount' => 10,
+                    'merchantAccountId' => '',
+                    'paymentInstrumentType' => 'credit_card',
+                    'creditCard' => [
+                        'token' => '9662jd',
+                        'bin' => '510510',
+                        'last4' => '5100',
+                        'cardType' => 'MasterCard',
+                        'expirationMonth' => '12',
+                        'expirationYear' => '2020',
+                        'cardholderName' => null,
+                        'issuingBank' => 'Unknown',
+                        'countryOfIssuance' => 'Unknown',
+                        'productId' => 'Unknown',
+                        'uniqueNumberIdentifier' => '0658f55519a57e295d5e5f485559e405'
+                    ]
+                ])));
+            }))
+        ;
 
         $action = new AuthorizeAction();
         $action->setGateway($gatewayMock);
@@ -242,24 +245,5 @@ class AuthorizeActionTest extends GenericActionTest
         ));
 
         $action->execute($request);
-    }
-
-    protected function createGatwayMockWithExecutes($executeSequence)
-    {
-        $gatewayMock = $this->createGatewayMock();
-
-        foreach ($executeSequence as $index => $executeAction) {
-
-            $requestClass = $executeAction[0];
-            $action = $executeAction[1];
-
-            $gatewayMock
-                ->expects($this->at($index))
-                ->method('execute')
-                ->with($this->isInstanceOf($requestClass))
-                ->will($this->returnCallback($action));
-        }
-
-        return $gatewayMock;
     }
 }
