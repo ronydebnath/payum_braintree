@@ -3,13 +3,18 @@ namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\GatewayAwareInterface;
+use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Model\PaymentInterface;
 use Payum\Core\Request\Convert;
+use Payum\Core\Request\GetCurrency;
 use Payum\Core\Security\SensitiveValue;
 
-class ConvertPaymentAction implements ActionInterface
+class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
 {
+    use GatewayAwareTrait;
+
     /**
      * {@inheritDoc}
      *
@@ -24,7 +29,10 @@ class ConvertPaymentAction implements ActionInterface
 
         $details = ArrayObject::ensureArrayObject($payment->getDetails());
 
-        $details['amount'] = $payment->getTotalAmount();
+        $this->gateway->execute($currency = new GetCurrency($payment->getCurrencyCode()));
+
+        $details['amount'] = $payment->getTotalAmount() / pow(10, $currency->exp);
+
         $details['orderId'] = $payment->getNumber();
 
         $request->setResult((array) $details);
