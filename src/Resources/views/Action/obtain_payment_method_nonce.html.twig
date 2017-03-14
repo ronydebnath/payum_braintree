@@ -6,7 +6,7 @@
         <form method="POST" action="{{ formAction }}" id="form">
             <div id="dropin-container"></div>
             <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
-            <input type="submit" value="Submit payment" />
+            <input type="submit" value="Submit payment" id="submit_btn" />
         </form>
     {% endblock %}
     
@@ -64,23 +64,34 @@
                 });
             }
 
-            obtainPaymentMethodNonce(braintree, {
-                clientToken: {{ clientToken|json_encode|raw }},
-                amount: {{ amount|json_encode|raw }},
-                obtainCardholderAuthentication: {{ obtainCardholderAuthentication|json_encode|raw }}
-            }, function(error, nonce) {
+            (function() {
 
-                if (error) {
+                var submitting = false;
+
+                obtainPaymentMethodNonce(braintree, {
+                    clientToken: {{ clientToken|json_encode|raw }},
+                    amount: {{ amount|json_encode|raw }},
+                    obtainCardholderAuthentication: {{ obtainCardholderAuthentication|json_encode|raw }}
+                }, function(error, nonce) {
+
+                    if (error) {
+                        return;
+                    }
+
+                    if (submitting) {
+                        return;
+                    }
+
+                    var input = document.getElementById('payment_method_nonce');
+                    input.value = nonce;
+
+                    var form = document.getElementById('form');
                     
-                    return;
-                }
+                    submitting = true;
 
-                var input = document.getElementById('payment_method_nonce');
-                input.value = nonce;
-
-                var form = document.getElementById('form');
-                form.submit();
-            });
+                    form.submit();
+                });
+            })();
 
         </script>
     {% endblock %}
