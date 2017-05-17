@@ -90,6 +90,15 @@
                     submitting = true;
 
                     form.submit();
+                    
+                    var button = document.getElementById('submit_btn');
+
+                    if (button) {
+                        button.style.filter = "grayscale(100%)";
+                        button.style.WebkitFilter = "grayscale(100%)";
+                        button.style.opacity = "0.7";
+                        button.disabled = true;
+                    }
                 });
             })();
 
