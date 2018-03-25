@@ -13,12 +13,6 @@
     "require": {
         "braintree/braintree_php": "^3.30.0"
     },
-    "repositories": [
-            {
-                "type": "github",
-                "url": "git@github.com:ronydebnath/core.git"
-            }
-        ],
     "require-dev": {
         "payum/core": "^1.5@dev",
         "php-http/guzzle6-adapter": "^1.0",
