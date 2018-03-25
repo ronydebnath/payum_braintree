@@ -1,5 +1,5 @@
 {
-    "name": "gdaws/payum_braintree",
+    "name": "ronydebnath/payum_braintree",
     "type": "library",
     "description": "A Payum extension for Braintree gateway integration",
     "keywords": ["payment", "braintree", "payum"],
