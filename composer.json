@@ -12,7 +12,8 @@
     ],
     "require": {
         "payum/core": "^1.5",
-        "braintree/braintree_php": "^3.30.0"
+        "braintree/braintree_php": "^3.30.0",
+        "php-http/client-implementation": "^1.0"
     },
     "require-dev": {
         "payum/core": "^1.5@dev",
